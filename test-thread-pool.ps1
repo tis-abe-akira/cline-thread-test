@@ -1,4 +1,7 @@
-# Function to make HTTP request
+# Set encoding to UTF-8
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+# HTTP request function
 function Invoke-ThreadPoolTest {
     param (
         [int]$numberOfCalls
@@ -7,21 +10,21 @@ function Invoke-ThreadPoolTest {
     try {
         $response = Invoke-RestMethod -Uri "http://localhost:8080/api/parallel-calls?numberOfCalls=$numberOfCalls" -Method Get
         Write-Host "`nResults for $numberOfCalls parallel calls:"
-        Write-Host "Thread Pool Stats: $($response.threadPoolStats)"
+        Write-Host "Thread Pool Status: $($response.threadPoolStats)"
         Write-Host "Individual Results:"
         $response.results | ForEach-Object { Write-Host "  $_" }
     }
     catch {
-        Write-Host "Error making request: $_"
+        Write-Host "Request Error: $_"
     }
 }
 
-Write-Host "Testing thread pool behavior..."
-Write-Host "Make sure Spring Boot application is running first!"
+Write-Host "Starting Thread Pool Test..."
+Write-Host "Please make sure Spring Boot application is running!"
 Write-Host "Press Enter to start testing..."
 $null = Read-Host
 
-# Test with different numbers of parallel calls
+# Test with different parallel calls
 Write-Host "`nTesting with 5 parallel calls..."
 Invoke-ThreadPoolTest -numberOfCalls 5
 
@@ -31,13 +34,13 @@ Invoke-ThreadPoolTest -numberOfCalls 10
 Write-Host "`nTesting with 20 parallel calls..."
 Invoke-ThreadPoolTest -numberOfCalls 20
 
-# Make multiple concurrent requests to simulate multiple users
-Write-Host "`nSimulating multiple concurrent users..."
+# Simulate multiple concurrent clients
+Write-Host "`nSimulating multiple concurrent clients..."
 $jobs = 1..3 | ForEach-Object {
     Start-Job -ScriptBlock {
         try {
             $response = Invoke-RestMethod -Uri "http://localhost:8080/api/parallel-calls?numberOfCalls=10" -Method Get
-            "Concurrent request completed. Thread Pool Stats: $($response.threadPoolStats)"
+            "Concurrent request completed. Thread Pool Status: $($response.threadPoolStats)"
         }
         catch {
             "Error in concurrent request: $_"

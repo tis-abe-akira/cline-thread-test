@@ -20,20 +20,32 @@ public class ExternalApiService {
     public List<String> performParallelApiCalls(int numberOfCalls) throws InterruptedException, ExecutionException {
         List<Callable<String>> tasks = new ArrayList<>();
         
-        // Create tasks that simulate API calls
+        // Create tasks
         for (int i = 0; i < numberOfCalls; i++) {
             final int taskId = i;
             tasks.add(() -> {
-                // Simulate API call with random processing time
-                Thread.sleep((long) (Math.random() * 2000));
                 String threadName = Thread.currentThread().getName();
-                log.info("Task {} executed by thread: {}", taskId, threadName);
-                return String.format("Result from task %d (Thread: %s)", taskId, threadName);
+                log.info("Task {} started (Thread: {})", taskId, threadName);
+                
+                // Simulate API call (2-4 seconds random processing time)
+                Thread.sleep((long) (2000 + Math.random() * 2000));
+                
+                log.info("Task {} completed (Thread: {})", taskId, threadName);
+                return String.format("Task %d result (Thread: %s)", taskId, threadName);
             });
         }
 
-        // Execute all tasks in parallel with a timeout
-        List<Future<String>> futures = executorService.invokeAll(tasks, 5, TimeUnit.SECONDS);
+        // Show thread pool state before execution
+        if (executorService instanceof ThreadPoolExecutor) {
+            ThreadPoolExecutor executor = (ThreadPoolExecutor) executorService;
+            log.info("Thread pool state before execution - Active: {}, Pool Size: {}, Queue Size: {}",
+                executor.getActiveCount(),
+                executor.getPoolSize(),
+                executor.getQueue().size());
+        }
+
+        // Execute all tasks (timeout: 30 seconds)
+        List<Future<String>> futures = executorService.invokeAll(tasks, 30, TimeUnit.SECONDS);
         
         // Collect results
         List<String> results = new ArrayList<>();
@@ -46,15 +58,25 @@ public class ExternalApiService {
             }
         }
         
+        // Show thread pool state after execution
+        if (executorService instanceof ThreadPoolExecutor) {
+            ThreadPoolExecutor executor = (ThreadPoolExecutor) executorService;
+            log.info("Thread pool state after execution - Active: {}, Pool Size: {}, Queue Size: {}, Completed: {}",
+                executor.getActiveCount(),
+                executor.getPoolSize(),
+                executor.getQueue().size(),
+                executor.getCompletedTaskCount());
+        }
+        
         return results;
     }
 
-    // Method to get current thread pool statistics
+    // Get thread pool statistics
     public String getThreadPoolStats() {
         if (executorService instanceof ThreadPoolExecutor) {
             ThreadPoolExecutor executor = (ThreadPoolExecutor) executorService;
             return String.format(
-                "Thread Pool Stats: [Active: %d, Pool: %d, Queue: %d, Completed: %d]",
+                "Thread Pool Status [Active: %d, Pool Size: %d, Queue: %d, Completed: %d]",
                 executor.getActiveCount(),
                 executor.getPoolSize(),
                 executor.getQueue().size(),
