@@ -14,6 +14,7 @@ public class ThreadPoolConfig {
     public ExecutorService executorService() {
         // システムで利用可能なプロセッサ数に基づいてスレッド数を設定
         int threadPoolSize = Runtime.getRuntime().availableProcessors();
+        // int threadPoolSize = 30; // プロセッサ数無視してスレッド数を30に設定
         log.info("スレッドプールを初期化します。スレッド数: {}", threadPoolSize);
         return Executors.newFixedThreadPool(threadPoolSize);
     }
